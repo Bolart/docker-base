@@ -1,0 +1,68 @@
+version: '3'
+
+networks:
+  gkomlaravel:
+    driver: bridge
+#
+services:
+  site:
+    build:
+      context: .
+      dockerfile: ./nginx/nginx.dockerfile
+    container_name: base_nginx
+    ports:
+      - 80:80
+    volumes:
+      - ./src:/var/www:delegated
+    depends_on:
+      - php
+      - redis
+      - gkom-database
+    networks:
+      - gkomlaravel
+#
+  gkom-database:
+    platform: linux/x86_64
+    image: mysql:5.7.29
+    container_name: base_database
+    restart: unless-stopped
+    tty: true
+    volumes:
+      - ./mysql:/var/lib/mysql
+    ports:
+      - 3306:3306
+    environment:
+      MYSQL_DATABASE: gkom
+      MYSQL_USER: gkom_user
+      MYSQL_PASSWORD: AKSjfg7aq2rwa
+      MYSQL_ROOT_PASSWORD: secret
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    networks:
+      - gkomlaravel
+
+  php:
+    build:
+      context: .
+      dockerfile: ./php/php.dockerfile
+      args:
+        user: www
+        uid: 1000
+    container_name: base_php
+    restart: unless-stopped
+    working_dir: /var/www/
+    volumes:
+      - ./src:/var/www:delegated
+      - ./php/php.ini:/usr/local/etc/php/php.ini
+    #      - ./docker/php/php.ini:/usr/local/etc/php/conf.d/php.ini
+    networks:
+      - gkomlaravel
+
+  redis:
+    image: redis:alpine
+    container_name: base_redis
+    restart: unless-stopped
+    ports:
+      - 6379:6379
+    networks:
+      - gkomlaravel
