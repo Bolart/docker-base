@@ -9,3 +9,7 @@
 - mysql: 5.7.29
 - redis: alpine версия
 
+**Для запуска:**
+```bash
+docker-compose up -d
+```
